@@ -2,7 +2,7 @@
     <div>
         <h1>Products</h1>
         <div id="grid">
-            <ProductTile v-for="(product, pos) in products" :key="pos" :name="product.name" :imgName="product.imgName" :description="product.description"/>
+            <ProductTile v-for="(product, pos) in products" :key="pos" :id="product.id" :name="product.name" :imgName="product.imgName" :description="product.description"/>
         </div>
     </div>
 </template>
@@ -42,26 +42,31 @@ export default class ListProductsView extends Vue {
     // temp data until we integrate with firebase
     private products: Array<Product> = [
         {
+            id: 0,
             name: "Product 1",
             imgName: "logo.png",
             description: "Description for Product 1"
         },  
         {
+            id: 1,
             name: "Product 2",
             imgName: "logo.png",
             description: "Description for Product 2"
         },  
         {
+            id: 2,
             name: "Product 3",
             imgName: "logo.png",
             description: "Description for Product 3"
         },  
         {
+            id: 3,
             name: "Product 4",
             imgName: "logo.png",
             description: "Description for Product 4"
         },  
         {
+            id: 4,
             name: "Product 5",
             imgName: "logo.png",
             description: "Description for Product 5"
@@ -72,6 +77,7 @@ export default class ListProductsView extends Vue {
 }
 
 type Product = {
+    id: number;
     name: string;
     imgName: string;
     description: string;

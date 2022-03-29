@@ -1,9 +1,11 @@
 <template>
-    <div v-on:click="nothing">
+    <!--<div v-on:click="">-->
+    <router-link :to="{ name: 'productdetail', params: { id: this.id }}">
         <h2>{{name}}</h2>
         <img :src="require(`../assets/${imgName}`)">
         <p>{{description}}</p>
-    </div>
+    </router-link>
+    <!--</div>-->
 </template>
 
 <style scoped>
@@ -31,12 +33,14 @@ import { Vue, Options } from 'vue-class-component';
 
 @Options ({
     props: {
+        id: Number,
         name: String,
         description: String,
         imgName: String
     }
 })
 export default class ProductTile extends Vue {
+    id!: number;
     name!: string;
     description!: string;
     imgName!:string;
