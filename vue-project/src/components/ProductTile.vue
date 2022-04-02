@@ -1,11 +1,9 @@
 <template>
-    <!--<div v-on:click="">-->
-    <router-link :to="{ name: 'productdetail', params: { id: this.id }}">
+    <div v-on:click="$router.push({ name: 'productdetail', params: {id: this.id}})">
         <h2>{{name}}</h2>
         <img :src="require(`../assets/${imgName}`)">
         <p>{{description}}</p>
-    </router-link>
-    <!--</div>-->
+    </div>
 </template>
 
 <style scoped>

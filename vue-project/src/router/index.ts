@@ -26,6 +26,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/productdetail/:id',
     name: 'productdetail',
     component: () => import('../views/ProductDetailView.vue')
+  },
+  {
+    path: '/logout',
+    name: 'logout',
+    component: () => import('../views/LogoutView.vue')
   }
 ]
 

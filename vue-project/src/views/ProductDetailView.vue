@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
+import { Vue } from 'vue-class-component';
 
 export default class ProductDetailView extends Vue {
     data() {
@@ -11,7 +11,6 @@ export default class ProductDetailView extends Vue {
             id: -1, 
         }
     }
-
     
 }
 </script>

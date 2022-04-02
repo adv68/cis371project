@@ -4,7 +4,8 @@
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link> |
       <router-link to="/products">Products</router-link> |
-      <router-link to="/login">Login</router-link>
+      <router-link v-if="!loggedIn" to="/login">Login</router-link>
+      <router-link v-if="loggedIn" to="/logout">Logout</router-link>  
     </nav>
     <router-view/>
   </div>
@@ -32,3 +33,25 @@ nav a.router-link-exact-active {
   color: #42b983;
 }
 </style>
+
+<script lang="ts">
+  import { Vue } from "vue-class-component";
+  import { Auth, User, getAuth, onAuthStateChanged } from "firebase/auth";
+
+  export default class App extends Vue {
+    private auth: Auth | null = null;
+    private loggedIn = false;
+
+    mounted() {
+      this.auth = getAuth();
+      onAuthStateChanged(this.auth, (user: User | null) => {
+        if (this.auth.currentUser != null) {
+          this.loggedIn = true;
+        } else {
+          this.loggedIn = false;
+        }
+      })
+    }
+  }
+</script>
+

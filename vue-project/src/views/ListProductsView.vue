@@ -30,6 +30,8 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import ProductTile from '../components/ProductTile.vue';
+import { collection, getFirestore, getDocs, QuerySnapshot, DocumentData } from 'firebase/firestore';
+import app from '../firebase';
 
 @Options({
   components: {
@@ -38,6 +40,18 @@ import ProductTile from '../components/ProductTile.vue';
 })
 
 export default class ListProductsView extends Vue {
+
+    mounted() {
+        const db = getFirestore(app);
+        const productCollection = collection(db, "products");
+        getDocs(productCollection)
+            .then((qs: QuerySnapshot) => {
+                qs.docs.forEach((dd: DocumentData) => {
+                    console.log(dd);
+                })
+            })            
+        
+    }
     // TEMPORARY
     // temp data until we integrate with firebase
     private products: Array<Product> = [
