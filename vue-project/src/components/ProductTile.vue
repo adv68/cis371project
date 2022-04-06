@@ -1,8 +1,8 @@
 <template>
     <div v-on:click="$router.push({ name: 'productdetail', params: {id: this.id}})">
         <h2>{{name}}</h2>
-        <img :src="require(`../assets/${imgName}`)">
-        <p>{{description}}</p>
+        <img :id="id">
+        <p>{{`$${price.toFixed(2)}`}}</p>
     </div>
 </template>
 
@@ -28,20 +28,29 @@
 
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { storage } from "../firebase";
+import { ref, getDownloadURL } from "firebase/storage";
 
 @Options ({
     props: {
-        id: Number,
+        id: String,
         name: String,
-        description: String,
+        price: Number,
         imgName: String
     }
 })
 export default class ProductTile extends Vue {
-    id!: number;
+    id!: string;
     name!: string;
-    description!: string;
+    price!: number;
     imgName!:string;
-}
 
+    mounted() {
+        const image = document.getElementById(this.id);
+        getDownloadURL(ref(storage, this.imgName))
+            .then((url) => {
+                image?.setAttribute("src", url);
+            });
+    }
+}
 </script>

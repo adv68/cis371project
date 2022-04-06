@@ -36,16 +36,15 @@ nav a.router-link-exact-active {
 
 <script lang="ts">
   import { Vue } from "vue-class-component";
-  import { Auth, User, getAuth, onAuthStateChanged } from "firebase/auth";
+  import { Auth, getAuth, onAuthStateChanged } from "firebase/auth";
+  import { auth } from "./firebase"
 
   export default class App extends Vue {
-    private auth: Auth | null = null;
     private loggedIn = false;
 
     mounted() {
-      this.auth = getAuth();
-      onAuthStateChanged(this.auth, (user: User | null) => {
-        if (this.auth.currentUser != null) {
+      onAuthStateChanged(auth, () => {
+        if (auth?.currentUser != null) {
           this.loggedIn = true;
         } else {
           this.loggedIn = false;
