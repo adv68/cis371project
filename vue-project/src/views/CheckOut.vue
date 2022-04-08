@@ -1,18 +1,70 @@
 <!-- This is just a placeholder for the moment -->
 <template>
     <div>
-        <h1>Products</h1>
-        <div id="grid">
-            <ProductTile v-for="(product, pos) in products" :key="pos" :id="product.id" :name="product.name" :imgName="product.imgName" :price="product.price"/>
+        <h1>Checkout</h1>
+        <h2 id="header">Shipping Information</h2>
+        <div id="table">
+            <td>
+                <tr>Name : </tr>
+                <tr>Street Address : </tr>
+                <tr>City : </tr>
+                <tr>Zipcode : </tr>
+            </td>
+            <td>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="custName">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="custAddress">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="custCity">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="custZip">
+                </tr>
+            </td>
+        </div>
+        <h2 id="header">Payment Information</h2>
+        <div id="table">
+            <td>
+                <tr>Credit Card number : </tr>
+                <tr>Expiration Date : </tr>
+                <tr>CVV2 Number : </tr>
+                <tr>Name on card : </tr>
+            </td>
+            <td>
+                <tr>
+                    <input type="text" min ="" v-model.number="cardNum">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="cardExp">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.number="cardCv">
+                </tr>
+                <tr>
+                    <input type="text" min ="" v-model.lazy="cardName">
+                </tr>
+            </td>
         </div>
     </div>
 </template>
 
 <style scoped>
-    #grid {
-        display: grid;
-        grid-template-columns: 98%;
+    #header {
+        text-align: left;
+    }
+
+    #table {
+        margin-top: 8px;
+        margin-right: 8px;
+        display: table;
+        table-layout:auto;
         gap: 1%;
+        text-align: left;
+        border-width:thick;
+        border-color: blueviolet;
     }
 
     @media screen and (min-width: 400px) {
