@@ -2,7 +2,7 @@
   <div class="about">
     <h1>About</h1>
 
-    <p>This web application is <b>NOT</b> a real store. It is merely a demonstration project of VueJS skills for CIS371 Web application programming at Grand Valley State Univerity in Allendale, Michigan, USA.</p>
+    <p>This web application is <b>NOT</b> a real store. It is merely a demonstration project of VueJS skills for CIS371 Web application programming at Grand Valley State University in Allendale, Michigan, USA.</p>
   </div>
 </template>
 
