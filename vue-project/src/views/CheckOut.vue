@@ -2,8 +2,10 @@
 <template>
     <div>
         <h1>Checkout</h1>
-        <h2 id="header">Shipping Information</h2>
-        <div id="table">
+        <h2>Shipping Information</h2>
+        <div id="grid">
+        
+        <table>
             <td>
                 <tr>Name : </tr>
                 <tr>Street Address : </tr>
@@ -24,9 +26,12 @@
                     <input type="text" min ="" v-model.lazy="custZip">
                 </tr>
             </td>
+            
+        </table>
+        <h3>Total : ${{this.total}}</h3>
         </div>
-        <h2 id="header">Payment Information</h2>
-        <div id="table">
+        <h2>Payment Information</h2>
+        <table>
             <td>
                 <tr>Credit Card number : </tr>
                 <tr>Expiration Date : </tr>
@@ -47,33 +52,51 @@
                     <input type="text" min ="" v-model.lazy="cardName">
                 </tr>
             </td>
+        </table>
         </div>
-    </div>
 </template>
 
 <style scoped>
-    #header {
+    h2 {
         text-align: left;
     }
 
-    #table {
+    h3 {
+        text-align: right;
+    }
+
+    #grid {
+        display: grid;
+        grid-template-columns: 98%;
+        gap: 1%;
+    }
+
+    table {
         margin-top: 8px;
         margin-right: 8px;
         display: table;
         table-layout:auto;
         gap: 1%;
         text-align: left;
-        border-width:thick;
-        border-color: blueviolet;
+        border:2px solid black;
+        background-color: #aaaaaa;
     }
 
     @media screen and (min-width: 400px) {
+        table, td, tr {
+            table-layout: 49% 49%;
+        }
+
         #grid {
             grid-template-columns: 49% 49%;
         }
     }
 
     @media screen and (min-width: 650px) {
+        table, td, tr {
+            table-layout: 49% 49%;
+        }
+
         #grid {
             grid-template-columns: 32% 32% 32%;
         }
@@ -83,45 +106,38 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import ProductTile from '../components/ProductTile.vue';
-import { collection, getDocs, QuerySnapshot, DocumentSnapshot } from 'firebase/firestore';
+import { collection, getDocs, QuerySnapshot, DocumentSnapshot, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-
-@Options({
+import { getAuth } from 'firebase/auth';
+import { onMounted } from '@vue/runtime-core';
+/* @Options({
   components: {
     ProductTile,
   },
-})
+}) */
 
-export default class ListProductsView extends Vue {
-    private products: Array<Product> = [];
+export default class CheckoutView extends Vue {
+    private prices: Array<number> = [];
+    public total = 0;
 
     mounted() {
-        const productCollection = collection(db, "products");
-        getDocs(productCollection)
-            .then((qs: QuerySnapshot) => {
-                qs.docs.forEach((ds: DocumentSnapshot) => {
-                    const data = ds.data();
-                    if (data != null) {
-                        this.products.push({
-                            id: ds.id,
-                            name: data.name,
-                            imgName: data.image,
-                            price: data.price
-                        }); 
-                    }
+        let uid = null;
+        const auth = getAuth();
+        if(auth.currentUser != null){
+            uid= auth.currentUser.uid;
+        }
+        //const productCollection = collection(db, "products");
+        const collectionRef = collection(db, "Users", uid + "", "Cart" );
+        getDocs(collectionRef).then((qs:QuerySnapshot) => {
+            qs.forEach((qd: QueryDocumentSnapshot) => {
+                this.total +=qd.data().price;
+                console.log(qd.data().price)
                 })
             })
             .catch((error) => {
                 console.log(error);
-            });     
+            });
+        console.log("after prices load");
     }
 }
-
-type Product = {
-    id: string;
-    name: string;
-    imgName: string;
-    price: number;
-}
-
 </script>
