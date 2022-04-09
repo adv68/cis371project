@@ -1,8 +1,14 @@
 <template>
+    <span>
     <h1>{{name}}</h1>
     <img :src="imgUrl">
     <h2>{{`$${price.toFixed(2)}`}}</h2>
     <p>{{description}}</p>
+
+    <input type="number" v-model="quantity"/>
+    <button @click="carted">Add to cart </button>
+    <p v-text="message"/>
+    </span>
 </template>
 
 <style scoped>
@@ -14,9 +20,10 @@
 
 <script lang="ts">
 import { Vue } from 'vue-class-component';
-import { doc, getDoc, DocumentSnapshot } from "firebase/firestore";
+import { doc, getDoc, DocumentSnapshot, collection, addDoc } from "firebase/firestore";
 import { ref, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { auth, db, storage } from "../firebase";
+import { getAuth } from '@firebase/auth';
 
 export default class ProductDetailView extends Vue {
     private id: string | string[] | null = null;
@@ -25,6 +32,8 @@ export default class ProductDetailView extends Vue {
     private imgUrl = "";
     private price = 0;
     private description = "";
+    private quantity = 1;
+    private message = "";
     
     mounted() {
         this.id = this.$route.params.id;
@@ -40,6 +49,26 @@ export default class ProductDetailView extends Vue {
                 getDownloadURL(ref(storage, this.imgName))
                     .then((url) => this.imgUrl = url);
             });
+    }
+
+    carted() : void {
+        try{
+        this.message ="";
+        const auth = getAuth();
+        let uid = auth.currentUser?.uid;
+        if(uid == undefined){
+            throw console.error();
+            
+        }
+        const collectionRef = collection(db, "Users", uid + "", "Cart" );
+    
+        addDoc(collectionRef, {productName : this.name,price : this.price, quantity : this.quantity})
+        }catch{
+            console.log("user not logged in");
+            this.message = " User not logged in. Log in or create an account to continue";
+        }
+        
+
     }
 }
 </script>
