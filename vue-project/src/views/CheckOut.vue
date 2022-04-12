@@ -7,52 +7,70 @@
         
         <table>
             <td>
-                <tr>Name : </tr>
-                <tr>Street Address : </tr>
-                <tr>City : </tr>
-                <tr>Zipcode : </tr>
-            </td>
-            <td>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="custName">
+                <tr>Name : <td> 
+                    <input type="text" min ="" v-model.lazy="custName"> </td> 
+                    
+                    </tr>
+                <tr>Street Address : <td> 
+                    <input type="text" min ="" v-model.lazy="custAddress"> 
+                    </td>
+                    </tr>
+                <tr>City : 
+                    <td>
+                        <input type="text" min ="" v-model.lazy="custCity"> 
+                        </td> 
                 </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="custAddress">
-                </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="custCity">
-                </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="custZip">
-                </tr>
+                <tr>Zipcode :
+                    <td>
+                        <input type="text" min ="" v-model.lazy="custZip">
+                    </td>
+                     </tr>
             </td>
             
         </table>
-        <h3>Total : ${{this.total}}</h3>
+
+        <table>
+        <th>Product</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <tr v-for="(item, pos) in items" :key="pos">
+            <td>{{items[pos].name}}</td>
+            <td>{{items[pos].price}} </td>
+            <td>{{items[pos].quantity}} </td>
+        </tr>        
+        <tr>Total :
+        <td> ${{this.total}} </td>    
+        </tr>
+        </table>
+        
         </div>
         <h2>Payment Information</h2>
         <table>
-            <td>
-                <tr>Credit Card number : </tr>
-                <tr>Expiration Date : </tr>
-                <tr>CVV2 Number : </tr>
-                <tr>Name on card : </tr>
-            </td>
-            <td>
-                <tr>
+            
+                <tr>Credit Card number :
+                    <td>
                     <input type="text" min ="" v-model.number="cardNum">
-                </tr>
-                <tr>
+                    </td>
+                         </tr>
+                <tr>Expiration Date : 
+                    <td>
                     <input type="text" min ="" v-model.lazy="cardExp">
+
+                    </td>
                 </tr>
-                <tr>
+                <tr>CVV2 Number :
+                    <td>
                     <input type="text" min ="" v-model.number="cardCv">
-                </tr>
-                <tr>
+                        
+                    </td>
+                     </tr>
+                <tr>Name on card : 
+                    <td>
                     <input type="text" min ="" v-model.lazy="cardName">
-                </tr>
-            </td>
+                    </td>
+                     </tr>
         </table>
+        <button>Purchase</button>
         </div>
 </template>
 
@@ -116,10 +134,21 @@ import { onMounted } from '@vue/runtime-core';
   },
 }) */
 
+type Item = {
+        price: 0;
+        name: 0;
+        quantity :0;
+    }
+
+    
+
 export default class CheckoutView extends Vue {
     private prices: Array<number> = [];
     public total = 0;
 
+    
+    private items : Array<Item> = [];
+    
     mounted() {
         let uid = null;
         const auth = getAuth();
@@ -130,8 +159,16 @@ export default class CheckoutView extends Vue {
         const collectionRef = collection(db, "Users", uid + "", "Cart" );
         getDocs(collectionRef).then((qs:QuerySnapshot) => {
             qs.forEach((qd: QueryDocumentSnapshot) => {
-                this.total +=qd.data().price;
+                this.total +=qd.data().price * qd.data().quantity;
                 console.log(qd.data().price)
+
+                let item : Item ={
+                    name : qd.data().productName,
+                    price : qd.data().price,
+                    quantity : qd.data().quantity
+                }
+
+                this.items.push(item);
                 })
             })
             .catch((error) => {
