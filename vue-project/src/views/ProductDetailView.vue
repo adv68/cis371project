@@ -6,7 +6,7 @@
     <p>{{description}}</p>
 
     <input type="number" v-model="quantity"/>
-    <button @click="carted">Add to cart </button>
+    <button id="addToCart" @click="carted"  v-bind:disabled= "disabled">Add to cart </button>
     <p v-text="message"/>
     </span>
 </template>
@@ -34,6 +34,8 @@ export default class ProductDetailView extends Vue {
     private description = "";
     private quantity = 1;
     private message = "";
+    private inStock = 0;
+    private disabled = false;
     
     mounted() {
         this.id = this.$route.params.id;
@@ -44,12 +46,23 @@ export default class ProductDetailView extends Vue {
                 this.imgName = data?.image;
                 this.price = data?.price;
                 this.description = data?.description;
+                this.inStock = data?.inStock;
+            
             })
             .then(() => {
+
+                if(this.inStock == 0){
+                    
+                    this.message = "Out of Stock";
+                    this.disabled = true;
+            }
                 getDownloadURL(ref(storage, this.imgName))
                     .then((url) => this.imgUrl = url);
             });
+
+            
     }
+    
 
     carted() : void {
         try{
@@ -60,13 +73,19 @@ export default class ProductDetailView extends Vue {
             throw console.error();
             
         }
-        const collectionRef = collection(db, "Users", uid + "", "Cart" );
-    
-        addDoc(collectionRef, {productName : this.name,price : this.price, quantity : this.quantity})
+
+        if(this.inStock >= this.quantity){
+            const collectionRef = collection(db, "Users", uid + "", "Cart" );        
+            addDoc(collectionRef, {productName : this.name,price : this.price, quantity : this.quantity})
+        
+        }else{
+            this.message = "Quantity to Large. Try a smaller number";
+        }
         }catch{
             console.log("user not logged in");
             this.message = " User not logged in. Log in or create an account to continue";
         }
+        
         
 
     }
