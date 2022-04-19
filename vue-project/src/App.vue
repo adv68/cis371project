@@ -36,7 +36,7 @@ nav a.router-link-exact-active {
 
 <script lang="ts">
   import { Vue } from "vue-class-component";
-  import { Auth, getAuth, onAuthStateChanged } from "firebase/auth";
+  import { onAuthStateChanged } from "firebase/auth";
   import { auth } from "./firebase"
 
   export default class App extends Vue {
