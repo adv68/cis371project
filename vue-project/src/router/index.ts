@@ -31,6 +31,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/logout',
     name: 'logout',
     component: () => import('../views/LogoutView.vue')
+  },
+  {
+    path: '/checkout',
+    name: 'checkout',
+    component: () => import('../views/CheckOut.vue')
   }
 ]
 

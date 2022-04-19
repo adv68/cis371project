@@ -5,7 +5,8 @@
       <router-link to="/about">About</router-link> |
       <router-link to="/products">Products</router-link> |
       <router-link v-if="!loggedIn" to="/login">Login</router-link>
-      <router-link v-if="loggedIn" to="/logout">Logout</router-link>  
+      <router-link v-if="loggedIn" to="/logout">Logout</router-link> | 
+      <router-link to="/CheckOut">Check out</router-link> 
     </nav>
     <router-view/>
   </div>
