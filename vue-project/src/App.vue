@@ -6,7 +6,7 @@
       <router-link to="/products">Products</router-link> |
       <router-link v-if="!loggedIn" to="/login">Login</router-link>
       <router-link v-if="loggedIn" to="/logout">Logout</router-link> | 
-      <router-link to="/CheckOut">Check out</router-link> 
+      <router-link to="/cart">&#128722;:{{numItemsInCart}}</router-link>
     </nav>
     <router-view/>
   </div>
@@ -38,19 +38,34 @@ nav a.router-link-exact-active {
 <script lang="ts">
   import { Vue } from "vue-class-component";
   import { onAuthStateChanged } from "firebase/auth";
-  import { auth } from "./firebase"
+  import { auth, db } from "./firebase"
+  import { collection, onSnapshot, QueryDocumentSnapshot, QuerySnapshot } from "firebase/firestore";
 
   export default class App extends Vue {
     private loggedIn = false;
+    private firestoreStopListen: any;
+    private numItemsInCart = 0;
 
     mounted() {
       onAuthStateChanged(auth, () => {
+        this.numItemsInCart = 0;
+        if (this.firestoreStopListen != null) {
+          this.firestoreStopListen();
+        }
         if (auth?.currentUser != null) {
           this.loggedIn = true;
+
+          this.firestoreStopListen = onSnapshot(collection(db, "userdata", auth.currentUser.uid, "cart"), (ss: QuerySnapshot) => {
+            let cartCounter = 0;
+            ss.docs.forEach((dss: QueryDocumentSnapshot) => {
+              cartCounter += dss.get("qty") as number;
+            });
+            this.numItemsInCart = cartCounter;
+          })
         } else {
           this.loggedIn = false;
         }
-      })
+      });
     }
   }
 </script>

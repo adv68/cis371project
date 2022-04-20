@@ -76,7 +76,13 @@ export default class LoginView extends Vue {
         signInWithEmailAndPassword(auth, this.emailLogin, this.emailLoginPassword)
             .then(async (user: UserCredential) => {
                 if (user.user.emailVerified) {
-                    this.$router.push({name: 'home'});
+                    if (this.$route.query["redirect"] != null) {
+                        this.$router.replace({path: this.$route.query["redirect"] as string});
+                    } else {
+                        this.$router.replace({name: "home"});
+                    }
+
+                    //this.$router.push({name: 'home'});
                 } else {
                     alert("Your email address is not verified.");
                     await signOut(auth);
@@ -93,7 +99,11 @@ export default class LoginView extends Vue {
         const googleProvider = new GoogleAuthProvider();
         signInWithPopup(auth, googleProvider)
             .then(() => {
-                this.$router.push({ name: 'home'});
+                if (this.$route.query["redirect"] != null) {
+                    this.$router.replace({path: this.$route.query["redirect"] as string});
+                } else {
+                    this.$router.replace({name: "home"});
+                }
             });
     }
 

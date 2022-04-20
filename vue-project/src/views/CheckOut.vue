@@ -1,142 +1,71 @@
 <template>
-    <div>
+    <div id="gridCont">
         <h1>Checkout</h1>
-        <h2>Shipping Information</h2>
+
         <div id="grid">
-        
-        <table>
-            <td>
-                <tr>Name : </tr>
-                <tr>Street Address : </tr>
-                <tr>City : </tr>
-                <tr>Zipcode : </tr>
-            </td>
-            <td>
-                <tr><input type="text" min = "" v-model.lazy="custName"/></tr>
-                <tr><input type="text" v-model.lazy="custAddress"/></tr>
-                <tr><input type="text" v-model.lazy="custCity"/></tr>
-                <tr><input type="text" v-model.lazy="custZip"/></tr>
-            </td>
-        </table>
+            <div>
+                <h2>Shipping</h2>
+                <table>
+                    <td>
+                        <tr>Name:</tr>
+                        <tr>Address:</tr>
+                        <tr>City:</tr>
+                        <tr>Zipcode:</tr>
+                    </td>
+                    <td>
+                        <tr><input type="text" min="" v-model.lazy="custName"/></tr>
+                        <tr><input type="text" v-model.lazy="custAddress"/></tr>
+                        <tr><input type="text" v-model.lazy="custCity"/></tr>
+                        <tr><input type="text" v-model.lazy="custZip"/></tr>
+                    </td>
+                </table>
 
-        <table>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <tr v-for="(item,pos) in items" :key =pos> 
-                <td>{{item.name}}</td>
-                <td>{{item.quantity}}</td>
-                <td>{{item.price}}</td>
+                <h2>Billing</h2>
+                <table>
+                    <td>
+                        <tr>Card Number:</tr>
+                        <tr>Expiration Date:</tr>
+                        <tr>CVC Code:</tr>
+                        <tr>Cardholder:</tr>
+                    </td>
+                    <td>
+                        <tr><input type="text" min="" v-model.lazy="cardNum"></tr>
+                        <tr><input type="text" min="" v-model.lazy="cardExp"></tr>
+                        <tr><input type="text" min="" v-model.lazy="cardCVC"></tr>
+                        <tr><input type="text" min="" v-model.lazy="cardName"></tr>
+                    </td>
+                </table>
+            </div>
+            <div>
+                <h2>Your Order</h2>
 
-            
-            
-            </tr>
+                <p v-for="(item, pos) in items" :key="pos">({{item.quantity}}) {{item.name}} - ${{(item.price * item.quantity).toFixed(2)}}</p>
 
-        </table>
-        <h3>    Total : ${{this.total}}</h3>
+                <h3>Total: ${{total.toFixed(2)}}</h3>
+            </div>
         </div>
-        <h2>Payment Information</h2>
-        <table>
-            <td>
-                <tr>Credit Card number : </tr>
-                <tr>Expiration Date : </tr>
-                <tr>CVV2 Number : </tr>
-                <tr>Name on card : </tr>
-            </td>
-            <td>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="cardNum">
-                </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="cardExp">
-                </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="cardCVV">
-                </tr>
-                <tr>
-                    <input type="text" min ="" v-model.lazy="cardName">
-                </tr>
-            </td>
-        </table>
-        <button @click="save()">Submit</button>
-        </div>
+
+        <button @click="submit" :disabled="custName == '' || custAddress == '' || custCity == '' || custZip == '' || cardNum.length < 16 || cardExp == '' || cardCVC == '' || cardName == ''">Submit Order</button>
+    </div>
 </template>
 
-<script lang="ts">
-import { Vue } from 'vue-class-component';
-import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc} from 'firebase/firestore';
-import { db } from '../firebase';
-import { getAuth } from 'firebase/auth';
-
-type Item = {
-    name: "",
-    price:0,
-    quantity:0
-
-}
-export default class CheckoutView extends Vue {
-    private prices: Array<number> = [];
-    private products = {};
-    private total = 0;
-    custName = "";
-    custAddress = "";
-    custCity = "";
-    custZip = "";
-    cardNum = "";
-    cardExp = "";
-    cardCVV = "";
-    cardName = "";
-    uid = "";
-    private items : Array<Item> = [];
-    save():void{  
-        const orderRef = collection(db, "Users", this.uid + "", "Orders");
-        const cartRef = collection(db, "Users", this.uid + "", "Cart" );
-        addDoc(orderRef, {name: this.custName, address: this.custAddress,
-        city: this.custCity, zip: this.custZip, cardNumber: this.cardNum,
-        cardExpiration: this.cardExp, cardCVV2: this.cardCVV, NameOnCard: this.cardName});
-        getDocs(cartRef).then((qs:QuerySnapshot) => {
-            qs.forEach((qd: QueryDocumentSnapshot) => {
-                deleteDoc(doc(db, "Users", this.uid + "", "Cart", "" + qd.id));
-                
-            
-            })
-        })
-            .catch((error) => {
-                console.log(error);
-            });
-            this.$router.replace("/about");
-    }
-    mounted() {
-        const auth = getAuth();
-        if(auth.currentUser != null){
-            this.uid= auth.currentUser.uid;
-        }
-        //const productCollection = collection(db, "products");
-        const collectionRef = collection(db, "Users", this.uid + "", "Cart" );
-        getDocs(collectionRef).then((qs:QuerySnapshot) => {
-                
-            qs.forEach((qd: QueryDocumentSnapshot) => {
-                this.total +=qd.data().price * qd.data().quantity;
-
-                this.items.push({name:qd.data().productName, price: qd.data().price, quantity: qd.data().quantity});
-                })
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }
-}
-</script>
-
 <style scoped>
-    h2 {
-        text-align: left;
+    #gridCont {
+        width: 80%;
+        max-width: 600px;
+        margin: 0 auto;
     }
+
     #grid {
         display: grid;
         grid-template-columns: 98%;
         gap: 1%;
     }
+
+    #grid > div {
+        border: 1px solid #2c3e50;
+    }
+
     table {
         margin-top: 8px;
         margin-right: 8px;
@@ -151,12 +80,87 @@ export default class CheckoutView extends Vue {
     }
     @media screen and (min-width: 400px) {
        #grid {
-            grid-template-columns: 49% 49%;
-        }
-    }
-    @media screen and (min-width: 650px) {
-        #grid {
-            grid-template-columns: 32% 32% 32%;
+            grid-template-columns: 50% 50%;
         }
     }
 </style>
+
+<script lang="ts">
+import { Vue } from 'vue-class-component';
+import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc} from 'firebase/firestore';
+import { db, auth } from '../firebase';
+
+type Item = {
+    name: string,
+    price: 0,
+    quantity: 0,
+    id: string
+}
+
+export default class CheckoutView extends Vue {
+    private prices: Array<number> = [];
+    private products = {};
+    private total = 0;
+    custName = "";
+    custAddress = "";
+    custCity = "";
+    custZip = "";
+    cardNum = "";
+    cardExp = "";
+    cardCVC = "";
+    cardName = "";
+    private items : Array<Item> = [];
+
+    mounted() {
+        if (auth.currentUser != null) {
+            const userCartItems = collection(db, "userdata", auth.currentUser.uid, "cart");
+            getDocs(userCartItems)
+                .then((qs_cart: QuerySnapshot) => {
+                    const products = collection(db, "products");
+                    getDocs(products)
+                        .then((qs_prod: QuerySnapshot) => {
+                            qs_cart.docs.forEach((ds: QueryDocumentSnapshot) => {
+                                const itemData = ds.data();
+                                const itemProductData = qs_prod.docs.find((d) => d.id == ds.id)!.data();
+                                if (itemData != null) {
+                                    this.items.push({
+                                        price: itemProductData.price,
+                                        quantity: itemData.qty,
+                                        name: itemProductData.name,
+                                        id: ds.id
+                                    });
+
+                                    this.total += (itemProductData.price * itemData.qty);
+                                }
+                            })
+                        })
+                })
+        } else {
+            this.$router.push({ name: "login", query: { redirect: this.$route.path}});
+        }
+    }
+
+    submit() {
+        if (auth.currentUser != null) {
+            addDoc(collection(db, "userdata", auth.currentUser.uid, "orders"), {
+                shippingName: this.custName,
+                shippingAddress: `${this.custAddress} ${this.custCity} ${this.custZip}`,
+                cardNum: `************${this.cardNum.substring(12)}`,
+                cardholder: this.cardName,
+                items: this.items.map((item: Item) => ({id: item.id, qty: item.quantity}))
+            }).then(() => {
+                getDocs(collection(db, "userdata", auth.currentUser!.uid, "cart"))
+                    .then((qs: QuerySnapshot) => {
+                        qs.forEach((qds: QueryDocumentSnapshot) => {
+                            deleteDoc(qds.ref);
+                        });
+                    });
+            });
+
+            this.$router.push({ name: "home"});
+        } else {
+            this.$router.push({ name: "login", query: { redirect: this.$route.path}});
+        }
+    }
+}
+</script>
