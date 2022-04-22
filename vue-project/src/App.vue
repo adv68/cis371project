@@ -4,6 +4,7 @@
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link> |
       <router-link to="/products">Products</router-link> |
+      <router-link to="/history">Order History</router-link> |
       <router-link v-if="!loggedIn" to="/login">Login</router-link>
       <router-link v-if="loggedIn" to="/logout">Logout</router-link> | 
       <router-link to="/cart">&#128722;:{{numItemsInCart}}</router-link>
