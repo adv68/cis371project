@@ -9,7 +9,7 @@
             <li>Bill To: {{cardNum}}</li>
         </ul>
         <h3>Items in Order</h3>
-        <p v-for="(item, pos) in items" :key="pos">{{item.id}}</p>
+        <p v-for="(item, pos) in names" :key="pos">{{names[pos]}}</p>
 
         <Doughnut v-if="loaded" :chart-data="chartData"/>
     </div>
@@ -54,6 +54,8 @@ export default class PastOrder extends Vue {
     private cardNum = "";
     private items = [];
     private loaded = false;
+    private names :Array<string> = [];
+    private quantities : Array<number> = [];
     
     private chartData = {
         datasets: [{
@@ -78,12 +80,44 @@ export default class PastOrder extends Vue {
                 this.cardNum = ds.get("cardNum");
                 this.items = ds.get("items");
 
-                this.items.forEach((item: Item) => {
+
+               let data = ds.data();
+               if(data != null || data != undefined){
+                
+                for(let i = 0; i < data.items.length; i++){
+                    console.log(data.items[i].id);
+
+                    let ref = doc(db,"products", data.items[i].id);
+                    let prodDoc = getDoc(ref).then((prodshot) =>{
+                        let data = prodshot.data();
+                        if(data != null){
+                        this.names.push(data.name + "");
+                       
+                        }
+                        
+                    }).then( () => {
+                
+                 let i = 0;
+                    this.items.forEach((item: Item) => {
                     this.chartData.datasets[0].data.push(item.qty);
-                    this.chartData.datasets[0].labels.push(item.id);
+                    this.chartData.datasets[0].labels.push(this.names[i]);
+                    console.log(this.names[i]);
+                    i++;
+                    
                 });        
                 
                 this.loaded = true;
+
+
+                    })
+             
+
+                }
+             
+
+               }
+             
+               
             });        
     }
 }

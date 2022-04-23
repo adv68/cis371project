@@ -136,7 +136,7 @@ export default class CheckoutView extends Vue {
                                     });
                                     this.quantities.push(itemData.qty)
                                     this.total += (itemProductData.price * itemData.qty);
-                                    console.log("ids length " + this.ids.length );
+                                    
                                 }
                             })
                         })
@@ -148,7 +148,7 @@ export default class CheckoutView extends Vue {
 
     submit() {
         if (auth.currentUser != null) {
-            console.log(this.ids.length);
+         
              for(let i = 0; i < this.ids.length; i++){
                 let ref = doc(db,"products", this.ids[i]);
                 let prodDoc = getDoc(ref).then((prodShot) => {
@@ -157,11 +157,9 @@ export default class CheckoutView extends Vue {
                     let stock = data.inStock; 
                     let newStock = stock - this.quantities[i];
                     updateDoc(ref,{inStock: newStock});
-                    console.log(newStock)
-                    }else{
-                        console.log("data null");
+                   
                     }
-                    console.log(this.ids[i] + " id");
+                    
                 });        
                
             }
@@ -184,7 +182,7 @@ export default class CheckoutView extends Vue {
            
            
 
-            //this.$router.push({ name: "home"});
+            this.$router.push({ name: "home"});
         } else {
             this.$router.push({ name: "login", query: { redirect: this.$route.path}});
         }
