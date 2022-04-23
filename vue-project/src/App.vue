@@ -7,7 +7,7 @@
       <router-link to="/history">Order History</router-link> |
       <router-link v-if="!loggedIn" to="/login">Login</router-link>
       <router-link v-if="loggedIn" to="/logout">Logout</router-link> | 
-      <router-link to="/cart">&#128722;:{{numItemsInCart}}</router-link>
+      <router-link to="/cart">&#128722;:{{numItemsInCart}}</router-link> 
     </nav>
     <router-view/>
   </div>
@@ -38,13 +38,13 @@ nav a.router-link-exact-active {
 
 <script lang="ts">
   import { Vue } from "vue-class-component";
-  import { onAuthStateChanged } from "firebase/auth";
+  import { onAuthStateChanged, Unsubscribe } from "firebase/auth";
   import { auth, db } from "./firebase"
   import { collection, onSnapshot, QueryDocumentSnapshot, QuerySnapshot } from "firebase/firestore";
 
   export default class App extends Vue {
     private loggedIn = false;
-    private firestoreStopListen: any;
+    private firestoreStopListen: Unsubscribe | null = null;
     private numItemsInCart = 0;
 
     mounted() {

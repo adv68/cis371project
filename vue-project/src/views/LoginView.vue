@@ -54,8 +54,6 @@
 <script lang="ts">
 import { Vue } from 'vue-class-component';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, UserCredential } from "firebase/auth";
-// eslint-disable-next-line
-import { Router } from "vue-router"; // this import is not used but is required as allows the routing functions
 import { auth } from "../firebase"
 
 export default class LoginView extends Vue {

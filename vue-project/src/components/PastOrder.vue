@@ -9,7 +9,7 @@
             <li>Bill To: {{cardNum}}</li>
         </ul>
         <h3>Items in Order</h3>
-        <p v-for="(item, pos) in names" :key="pos">{{names[pos]}}</p>
+        <p v-for="(item, pos) in orderList" :key="pos">{{item}}</p>
 
         <Doughnut v-if="loaded" :chart-data="chartData"/>
     </div>
@@ -33,10 +33,12 @@
 import { Options, Vue } from 'vue-class-component';
 import { db, auth } from '../firebase';
 import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
-import { Chart, ArcElement } from 'chart.js';
+import { Chart, ArcElement, Legend, Tooltip } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Doughnut } from 'vue-chartjs';
 
-Chart.register(ArcElement);
+Chart.register(ArcElement, Legend, Tooltip);
+Chart.register(ChartDataLabels);
 
 @Options({
     components: {
@@ -52,16 +54,23 @@ export default class PastOrder extends Vue {
     private shipAddress = "";
     private cardName = "";
     private cardNum = "";
-    private items = [];
+    private items: Array<Item> = [];
     private loaded = false;
-    private names :Array<string> = [];
-    private quantities : Array<number> = [];
+    private orderList: Array<string> = [];
     
     private chartData = {
+        labels: new Array<string>(),
         datasets: [{
             data: new Array<number>(),
             labels: new Array<string>(),
-            backgroundColor: ["#ff0000", "#00ff00", "#0000ff"]
+            backgroundColor: new Array<string>(),
+            datalabels: {
+                color: "#ffffff",
+                font: {
+                    size: "20pt",
+                    weight: "bold"
+                }
+            }
         }]
     }
 
@@ -72,53 +81,30 @@ export default class PastOrder extends Vue {
     }
 
     mounted() {
-        getDoc(doc(db, "userdata", auth.currentUser!.uid, "orders", this.id))
-            .then((ds: DocumentSnapshot) => {
-                this.shipName = ds.get("shippingName");
-                this.shipAddress = ds.get("shippingAddress");
-                this.cardName = ds.get("cardholder");
-                this.cardNum = ds.get("cardNum");
-                this.items = ds.get("items");
+        if (auth.currentUser != null) {
+            getDoc(doc(db, "userdata", auth.currentUser.uid, "orders", this.id))
+                .then(async (ds: DocumentSnapshot) => {
+                    this.shipName = ds.get("shippingName");
+                    this.shipAddress = ds.get("shippingAddress");
+                    this.cardName = ds.get("cardholder");
+                    this.cardNum = ds.get("cardNum");
+                    this.items = ds.get("items");
 
+                    for (const item of this.items) {
+                        const ds: DocumentSnapshot = await getDoc(doc(db, "products", item.id));
+                        this.orderList.push(
+                            ds.get("name") + ": " + item.qty + " @ $" + ds.get("price").toFixed(2)
+                        );
+                        this.chartData.datasets[0].data.push(item.qty);
+                        this.chartData.labels.push(ds.get("name"));
+                        this.chartData.datasets[0].backgroundColor.push(`#${Math.floor(Math.random() * 255).toString(16).padStart(2, "0")}${Math.floor(Math.random() * 255).toString(16).padStart(2, "0")}${Math.floor(Math.random() * 255).toString(16).padStart(2, "0")}`)
+                    }
 
-               let data = ds.data();
-               if(data != null || data != undefined){
-                
-                for(let i = 0; i < data.items.length; i++){
-                    console.log(data.items[i].id);
-
-                    let ref = doc(db,"products", data.items[i].id);
-                    let prodDoc = getDoc(ref).then((prodshot) =>{
-                        let data = prodshot.data();
-                        if(data != null){
-                        this.names.push(data.name + "");
-                       
-                        }
-                        
-                    }).then( () => {
-                
-                 let i = 0;
-                    this.items.forEach((item: Item) => {
-                    this.chartData.datasets[0].data.push(item.qty);
-                    this.chartData.datasets[0].labels.push(this.names[i]);
-                    console.log(this.names[i]);
-                    i++;
-                    
-                });        
-                
-                this.loaded = true;
-
-
-                    })
-             
-
-                }
-             
-
-               }
-             
-               
-            });        
+                    this.loaded = true;
+                });  
+        } else {
+            this.$router.push({ name: "login", query: { redirect: this.$route.path}});
+        }      
     }
 }
 

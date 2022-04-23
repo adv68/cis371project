@@ -1,8 +1,9 @@
 <template>
     <div v-if="!deleted">
+        <p v-if="qty > numInStock" class="warn">**Your order quantity has been reduced due to lack of stock.**</p>
         <h2>{{name}}</h2>
-        <h3 id="totalPrice">${{(qty * costPerItem).toFixed(2)}}</h3>
-        <h3>QTY: {{qty}}</h3>
+        <h3 id="totalPrice">${{((qty > numInStock ? numInStock : qty) * costPerItem).toFixed(2)}}</h3>
+        <h3>QTY: {{qty > numInStock ? numInStock : qty}}</h3>
         <p>Product_ID: {{id}}</p>
         <button @click="removeItemFromCart">Remove Item</button>
     </div>
@@ -20,7 +21,7 @@
         float: right;
     }
 
-    button {
+    button, .warn {
         color: #ff0000;
     }
 </style>
@@ -36,7 +37,8 @@ import { db, auth } from '../firebase';
         name: String,
         qty: Number,
         costPerItem: Number,
-        id: String
+        id: String,
+        numInStock: Number
     }
 })
 export default class CartProduct extends Vue {
@@ -44,12 +46,15 @@ export default class CartProduct extends Vue {
     qty!: number;
     costPerItem!: number;
     id!: string;
+    numInStock!: number;
 
     deleted = false;
 
     removeItemFromCart() {
-        deleteDoc(doc(db, "userdata", auth.currentUser!.uid, "cart", this.id));
-        this.deleted = true;
+        if (auth.currentUser != null) {
+            deleteDoc(doc(db, "userdata", auth.currentUser.uid, "cart", this.id));
+            this.deleted = true;
+        }
     }
 }
 
