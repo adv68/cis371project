@@ -87,7 +87,7 @@
 
 <script lang="ts">
 import { Vue } from 'vue-class-component';
-import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc} from 'firebase/firestore';
+import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc, updateDoc, getDoc} from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 type Item = {
@@ -110,9 +110,13 @@ export default class CheckoutView extends Vue {
     cardCVC = "";
     cardName = "";
     private items : Array<Item> = [];
+    private ids : Array<string> = [];
+    private quantities :Array<number> = []; 
 
     mounted() {
+        
         if (auth.currentUser != null) {
+            
             const userCartItems = collection(db, "userdata", auth.currentUser.uid, "cart");
             getDocs(userCartItems)
                 .then((qs_cart: QuerySnapshot) => {
@@ -122,6 +126,7 @@ export default class CheckoutView extends Vue {
                             qs_cart.docs.forEach((ds: QueryDocumentSnapshot) => {
                                 const itemData = ds.data();
                                 const itemProductData = qs_prod.docs.find((d) => d.id == ds.id)!.data();
+                               this.ids.push(ds.id);
                                 if (itemData != null) {
                                     this.items.push({
                                         price: itemProductData.price,
@@ -129,8 +134,9 @@ export default class CheckoutView extends Vue {
                                         name: itemProductData.name,
                                         id: ds.id
                                     });
-
+                                    this.quantities.push(itemData.qty)
                                     this.total += (itemProductData.price * itemData.qty);
+                                    console.log("ids length " + this.ids.length );
                                 }
                             })
                         })
@@ -142,6 +148,24 @@ export default class CheckoutView extends Vue {
 
     submit() {
         if (auth.currentUser != null) {
+            console.log(this.ids.length);
+             for(let i = 0; i < this.ids.length; i++){
+                let ref = doc(db,"products", this.ids[i]);
+                let prodDoc = getDoc(ref).then((prodShot) => {
+                    let data = prodShot.data();
+                    if(data != null){
+                    let stock = data.inStock; 
+                    let newStock = stock - this.quantities[i];
+                    updateDoc(ref,{inStock: newStock});
+                    console.log(newStock)
+                    }else{
+                        console.log("data null");
+                    }
+                    console.log(this.ids[i] + " id");
+                });        
+               
+            }
+
             addDoc(collection(db, "userdata", auth.currentUser.uid, "orders"), {
                 shippingName: this.custName,
                 shippingAddress: `${this.custAddress} ${this.custCity} ${this.custZip}`,
@@ -155,9 +179,12 @@ export default class CheckoutView extends Vue {
                             deleteDoc(qds.ref);
                         });
                     });
+                
             });
+           
+           
 
-            this.$router.push({ name: "home"});
+            //this.$router.push({ name: "home"});
         } else {
             this.$router.push({ name: "login", query: { redirect: this.$route.path}});
         }

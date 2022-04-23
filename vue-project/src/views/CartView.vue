@@ -34,6 +34,7 @@ export default class CartView extends Vue {
 
     mounted() {
         if (auth.currentUser != null) {
+        
             const userCartItems = collection(db, "userdata", auth.currentUser.uid, "cart");
             getDocs(userCartItems)
                 .then((qs_cart: QuerySnapshot) => {

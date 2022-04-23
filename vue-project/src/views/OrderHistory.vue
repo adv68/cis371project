@@ -21,7 +21,9 @@ export default class OrderHistory extends Vue {
     private orderIds: Array<string> = [];
 
     mounted() {
+
         if (auth.currentUser != null) {
+    
             getDocs(collection(db, "userdata", auth.currentUser.uid, "orders"))
                 .then((qs: QuerySnapshot) => {
                     qs.forEach((qds: QueryDocumentSnapshot) => {
