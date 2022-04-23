@@ -39,9 +39,9 @@
             <div>
                 <h2>Your Order</h2>
 
-                <p v-for="(item, pos) in items" :key="pos">({{item.quantity}}) {{item.name}} - ${{(item.price * item.quantity).toFixed(2)}}</p>
+                <p v-for="(item, pos) in cartProducts" :key="pos">({{item.qty <= item.product.numInStock ? item.qty : item.product.numInStock}}) {{item.product.name}} - ${{(item.product.price * (item.qty <= item.product.numInStock ? item.qty : item.product.numInStock)).toFixed(2)}}</p>
 
-                <h3>Total: ${{total.toFixed(2)}}</h3>
+                <h3>Total: ${{cartProducts.map((item) => (item.product.price * (item.qty <= item.product.numInStock ? item.qty : item.product.numInStock))).reduce((p, c) => p + c, 0).toFixed(2)}}</h3>
             </div>
         </div>
 
@@ -87,20 +87,12 @@
 
 <script lang="ts">
 import { Vue } from 'vue-class-component';
-import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc, updateDoc, getDoc} from 'firebase/firestore';
+import { collection, getDocs, QuerySnapshot, QueryDocumentSnapshot, addDoc, deleteDoc, doc, updateDoc, onSnapshot, DocumentChange, DocumentSnapshot} from 'firebase/firestore';
 import { db, auth } from '../firebase';
-
-type Item = {
-    name: string,
-    price: 0,
-    quantity: 0,
-    id: string
-}
+import { Unsubscribe } from '@firebase/util';
+import { CartItem } from '../types';
 
 export default class CheckoutView extends Vue {
-    private prices: Array<number> = [];
-    private products = {};
-    private total = 0;
     custName = "";
     custAddress = "";
     custCity = "";
@@ -109,79 +101,83 @@ export default class CheckoutView extends Vue {
     cardExp = "";
     cardCVC = "";
     cardName = "";
-    private items : Array<Item> = [];
-    private ids : Array<string> = [];
-    private quantities :Array<number> = []; 
+
+    private unsubscribe: Unsubscribe | null = null;
+    private cartProducts: Array<CartItem> = [];
 
     mounted() {
-        
         if (auth.currentUser != null) {
-            
-            const userCartItems = collection(db, "userdata", auth.currentUser.uid, "cart");
-            getDocs(userCartItems)
+            this.unsubscribe = onSnapshot(collection(db, "products"), (qs: QuerySnapshot) => {
+                qs.docChanges().forEach((docChng: DocumentChange) => {
+                    if (docChng.type == "modified") {
+                        const cartItemToUpdate = this.cartProducts.find((cItem: CartItem) => cItem.product.id == docChng.doc.id);
+                        if (cartItemToUpdate != null) {
+                            cartItemToUpdate.product.price = docChng.doc.get("price");
+                            cartItemToUpdate.product.numInStock = docChng.doc.get("inStock");
+                        }
+                    }
+                });
+            });
+
+            getDocs(collection(db, "userdata", auth.currentUser.uid, "cart"))
                 .then((qs_cart: QuerySnapshot) => {
                     const products = collection(db, "products");
                     getDocs(products)
                         .then((qs_prod: QuerySnapshot) => {
-                            qs_cart.docs.forEach((ds: QueryDocumentSnapshot) => {
+                            qs_cart.docs.forEach((ds: DocumentSnapshot) => {
                                 const itemData = ds.data();
-                                const itemProductData = qs_prod.docs.find((d) => d.id == ds.id)!.data();
-                               this.ids.push(ds.id);
-                                if (itemData != null) {
-                                    this.items.push({
-                                        price: itemProductData.price,
-                                        quantity: itemData.qty,
-                                        name: itemProductData.name,
-                                        id: ds.id
+                                const itemProduct = qs_prod.docs.find((d) => d.id == ds.id);
+                                if (itemData != null && itemProduct != null) {
+                                    this.cartProducts.push({
+                                        product: {
+                                            id: itemProduct.id,
+                                            description: itemProduct.get("description"),
+                                            imageUrl: itemProduct.get("image"),
+                                            name: itemProduct.get("name"),
+                                            price: itemProduct.get("price"),
+                                            numInStock: itemProduct.get("inStock")
+                                        },
+                                        qty: ds.get("qty")
                                     });
-                                    this.quantities.push(itemData.qty)
-                                    this.total += (itemProductData.price * itemData.qty);
-                                    
                                 }
-                            })
-                        })
-                })
+                            });
+                        });
+                });
         } else {
             this.$router.push({ name: "login", query: { redirect: this.$route.path}});
         }
     }
 
+    unmounted() {
+        if (this.unsubscribe != null) {
+            this.unsubscribe();
+        } 
+    }
+
     submit() {
         if (auth.currentUser != null) {
-         
-             for(let i = 0; i < this.ids.length; i++){
-                let ref = doc(db,"products", this.ids[i]);
-                let prodDoc = getDoc(ref).then((prodShot) => {
-                    let data = prodShot.data();
-                    if(data != null){
-                    let stock = data.inStock; 
-                    let newStock = stock - this.quantities[i];
-                    updateDoc(ref,{inStock: newStock});
-                   
-                    }
-                    
-                });        
-               
-            }
+            this.cartProducts.forEach((item: CartItem) => {
+                updateDoc(doc(db, "products", item.product.id), {inStock: (item.qty < item.product.numInStock ? item.product.numInStock - item.qty : 0)});
+            });  
 
             addDoc(collection(db, "userdata", auth.currentUser.uid, "orders"), {
                 shippingName: this.custName,
                 shippingAddress: `${this.custAddress} ${this.custCity} ${this.custZip}`,
                 cardNum: `************${this.cardNum.substring(12)}`,
                 cardholder: this.cardName,
-                items: this.items.map((item: Item) => ({id: item.id, qty: item.quantity}))
+                items: this.cartProducts.map((item: CartItem) => ({id: item.product.id, qty: (item.qty < item.product.numInStock ? item.qty : item.product.numInStock)}))
             }).then(() => {
-                getDocs(collection(db, "userdata", auth.currentUser!.uid, "cart"))
-                    .then((qs: QuerySnapshot) => {
-                        qs.forEach((qds: QueryDocumentSnapshot) => {
-                            deleteDoc(qds.ref);
+                if (auth.currentUser != null) {
+                    getDocs(collection(db, "userdata", auth.currentUser.uid, "cart"))
+                        .then((qs: QuerySnapshot) => {
+                            qs.forEach((qds: QueryDocumentSnapshot) => {
+                                deleteDoc(qds.ref);
+                            });
                         });
-                    });
+                }
                 
             });
            
-           
-
             this.$router.push({ name: "home"});
         } else {
             this.$router.push({ name: "login", query: { redirect: this.$route.path}});

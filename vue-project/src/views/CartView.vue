@@ -37,7 +37,6 @@ export default class CartView extends Vue {
 
     mounted() {
         if (auth.currentUser != null) {
-
             this.unsubscribe = onSnapshot(collection(db, "products"), (qs: QuerySnapshot) => {
                 qs.docChanges().forEach((docChng: DocumentChange) => {
                     if (docChng.type == "modified") {
@@ -48,11 +47,9 @@ export default class CartView extends Vue {
                         }
                     }
                 });
-            })
+            });
 
-
-            const userCartItems = collection(db, "userdata", auth.currentUser.uid, "cart");
-            getDocs(userCartItems)
+            getDocs(collection(db, "userdata", auth.currentUser.uid, "cart"))
                 .then((qs_cart: QuerySnapshot) => {
                     const products = collection(db, "products");
                     getDocs(products)
@@ -73,9 +70,9 @@ export default class CartView extends Vue {
                                         qty: ds.get("qty")
                                     });
                                 }
-                            })
-                        })
-                })
+                            });
+                        });
+                });
         } else {
             this.$router.push({ name: "login", query: { redirect: this.$route.path}});
         }
